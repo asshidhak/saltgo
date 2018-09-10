@@ -1,11 +1,12 @@
 package saltgo
 
 import (
-	"net/http"
-	"encoding/json"
 	"bytes"
-	"log"
+	"encoding/json"
+	"errors"
 	"io/ioutil"
+	"log"
+	"net/http"
 )
 
 type Client struct {
@@ -30,8 +31,6 @@ func New(cfg *Cfg) *Client{
 	return &client
 }
 
-
-
 func (self *Client) Post(perfix string, data interface{}) (*http.Response, error) {
 
 	urls := self.cfg.Base + perfix
@@ -40,7 +39,12 @@ func (self *Client) Post(perfix string, data interface{}) (*http.Response, error
 		panic(err)
 		return nil, err
 	}
-	res,err := http.Post(urls, "application/json", bytes.NewBuffer(json_data))
+	log.Println("Post data: ",string(json_data))
+	r := &http.Client{}
+	req, _ := http.NewRequest("POST",urls, bytes.NewBuffer(json_data))
+	req.Header.Set("X-Auth-Token",self.token)
+	req.Header.Set("Content-Type","application/json")
+	res,err := r.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -54,15 +58,50 @@ func (salt *Client) Auth() (error) {
 	if err!= nil {
 		return err
 	}
+	if res.StatusCode != 200 {
+		return errors.New("auth failed.")
+	}
 	resbyte, err := ioutil.ReadAll(res.Body)
-	log.Println(string(resbyte))
-	if err != nil {
+	resault := AuthResponse{}
+	if err := json.Unmarshal(resbyte,&resault); err !=nil {
 		return err
 	}
-	return err
+	new_token := resault.Return[0].Token
+	salt.token = new_token
+	return nil
 
 }
 
-func (st *Client) RunCmdSync()  {
+
+func (salt *Client) RunCmdAsync(fun string, args string, tgt []string) (string, error) {
+
+	saltRes := Response{}
+	client := "local_async"
+	run := Request{client, fun,args, tgt, "list"}
+	res, err := salt.Post("/", run)
+	if err != nil {
+		log.Println(err)
+		return "", err
+	}
+
+	if res.StatusCode != 200 {
+		return "", errors.New("failed to run job.")
+	}
+	resbyte,err := ioutil.ReadAll(res.Body)
+	if err := json.Unmarshal(resbyte, &saltRes); err != nil {
+		return "", err
+	}
+	return saltRes.Return[0].Jid, nil
+}
+
+func (salt *Client) GetJob(jid string) (interface{}, error) {
+	client := "runner"
+	job := RunnerRequest{client, "jobs.lookup_jid", jid}
+	_, err := salt.Post("/",job)
+	if err != nil {
+		return nil, err
+	}
+
+
 
 }
