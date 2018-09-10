@@ -3,11 +3,10 @@ package saltgo
 type Request struct {
 	Client string    `json:"client"`
 	Module string    `json:"fun"`
-	Args  string	 `json:"args"`
+	Args  string	 `json:"arg"`
 	Target []string  `json:"tgt"`
 	Form   string	 `json:"expr_form"`
 }
-
 
 type Response struct {
 	Return []struct{
@@ -15,8 +14,6 @@ type Response struct {
 		Minions []string  `json:"minions"`
 	}
 }
-
-
 
 type AuthResponse struct {
 	Return []struct{
@@ -27,6 +24,10 @@ type AuthResponse struct {
 type RunnerRequest struct {
 	Client string `json:"client"`
 	Module string `json:"fun"`
-	Args   string `json:"args"`
-
+	Jid   string `json:"jid"`
 }
+
+type RunnerResponse struct {
+	Return []map[string]interface{}
+}
+

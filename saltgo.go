@@ -94,14 +94,40 @@ func (salt *Client) RunCmdAsync(fun string, args string, tgt []string) (string, 
 	return saltRes.Return[0].Jid, nil
 }
 
-func (salt *Client) GetJob(jid string) (interface{}, error) {
+
+//salt "Zbp10vzq9iu3rf2blm0r7Z" state.sls cfg.nginx
+func (salt *Client) StateAsync(tgt []string, state string) (string, error) {
+	saltRes := Response{}
+	client := "local_async"
+	fun := "state.sls"
+	job := Request{client, fun, state, tgt, "list"}
+	res,err := salt.Post("/", job)
+	if err != nil {
+		return "", err
+	}
+	resbyte,err:= ioutil.ReadAll(res.Body)
+
+	if err!= nil {
+		return "",err
+	}
+	if err := json.Unmarshal(resbyte, &saltRes); err != nil {
+		return "", nil
+	}
+	return  saltRes.Return[0].Jid, err
+}
+
+
+func (salt *Client) GetJob(jid string) ([]map[string]interface{}, error) {
 	client := "runner"
 	job := RunnerRequest{client, "jobs.lookup_jid", jid}
-	_, err := salt.Post("/",job)
+	res, err := salt.Post("/",job)
 	if err != nil {
 		return nil, err
 	}
-
-
-
+	bytes,_ := ioutil.ReadAll(res.Body)
+	result := RunnerResponse{}
+	if err := json.Unmarshal(bytes,&result); err != nil {
+		return nil,err
+	}
+	return result.Return, nil
 }
