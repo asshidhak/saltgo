@@ -28,6 +28,7 @@ type Auth struct{
 func New(cfg *Cfg) *Client{
 	client := Client{}
 	client.cfg = *cfg
+	client.Auth()
 	return &client
 }
 
