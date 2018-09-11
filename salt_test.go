@@ -11,7 +11,7 @@ var config = Cfg{
 }
 func TestName(t *testing.T) {
 
-	salt :=New(&config)
+	salt,_ := New(&config)
 	if err := salt.Auth(); err != nil {
 		panic(err)
 	}
