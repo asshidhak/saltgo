@@ -59,6 +59,7 @@ func (salt *Client) Auth() (error) {
 
 	res, err := salt.Post("/login", salt.cfg.Auth)
 	if err!= nil {
+		log.Println(err)
 		return err
 	}
 	if res.StatusCode != 200 {
@@ -78,6 +79,7 @@ func (salt *Client) Auth() (error) {
 
 func (salt *Client) RunCmdAsync(fun string, args string, tgt []string) (string, error) {
 
+	salt.Auth()
 	saltRes := Response{}
 	client := "local_async"
 	run := Request{client, fun,args, tgt, "list"}
@@ -100,6 +102,8 @@ func (salt *Client) RunCmdAsync(fun string, args string, tgt []string) (string, 
 
 //salt "Zbp10vzq9iu3rf2blm0r7Z" state.sls cfg.nginx
 func (salt *Client) StateAsync(tgt []string, state string) (string, error) {
+
+	salt.Auth()
 	saltRes := Response{}
 	client := "local_async"
 	fun := "state.sls"
@@ -121,6 +125,8 @@ func (salt *Client) StateAsync(tgt []string, state string) (string, error) {
 
 
 func (salt *Client) GetJob(jid string) ([]map[string]interface{}, error) {
+
+	salt.Auth()
 	client := "runner"
 	job := RunnerRequest{client, "jobs.lookup_jid", jid}
 	res, err := salt.Post("/",job)
