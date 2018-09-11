@@ -25,11 +25,13 @@ type Auth struct{
 	Passwd string  `json:"password"`
 }
 
-func New(cfg *Cfg) *Client{
+func New(cfg *Cfg) (*Client, error) {
 	client := Client{}
 	client.cfg = *cfg
-	client.Auth()
-	return &client
+	if err := client.Auth(); err != nil {
+		return nil,err
+	}
+	return &client, nil
 }
 
 func (self *Client) Post(perfix string, data interface{}) (*http.Response, error) {
